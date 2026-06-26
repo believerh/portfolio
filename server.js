@@ -8,11 +8,32 @@ const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'profile-data.json');
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
+const DEFAULT_PROFILE = {
+  name: "OG Believer",
+  role: "Programmer and Developer",
+  bio: "Building the future, one commit at a time. Passionate about crafting seamless digital experiences with cutting-edge technology and minimalist design.",
+  avatar: null,
+  github: "https://github.com/believerrh",
+  whatsapp: "https://wa.me/233534970884",
+  stats: {
+    projects: "42+",
+    commits: "8.2K",
+    online: "24/7"
+  }
+};
+
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(DEFAULT_PROFILE, null, 2));
+}
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
 app.get('/api/profile', (req, res) => {
   try {
+    if (!fs.existsSync(DATA_FILE)) {
+      return res.json(DEFAULT_PROFILE);
+    }
     const data = fs.readFileSync(DATA_FILE, 'utf8');
     res.json(JSON.parse(data));
   } catch (error) {
