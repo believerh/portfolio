@@ -35,6 +35,10 @@ app.post('/api/profile', express.json(), (req, res) => {
   }
 });
 
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
