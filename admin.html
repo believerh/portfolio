@@ -347,6 +347,11 @@ color: var(--accent);
 </div>
 
 <div class="form-group">
+<label for="bookTitle">Memory Book Title (cover &amp; welcome banner)</label>
+<input type="text" id="bookTitle" placeholder="e.g. Anita's Memory Book ❤️">
+</div>
+
+<div class="form-group">
 <label for="birthdayPhotos">Photo URLs (one per line)</label>
 <textarea id="birthdayPhotos" placeholder="https://example.com/photo1.jpg"></textarea>
 </div>
@@ -383,6 +388,7 @@ color: var(--accent);
 let currentBirthday = null;
 const DEFAULT_BIRTHDAY = {
   name: 'ANITA',
+  bookTitle: "Anita's Memory Book ❤️",
   photoData: [
     { url: 'https://picsum.photos/400?random=1' },
     { url: 'https://picsum.photos/400?random=2' },
@@ -409,6 +415,7 @@ function showBirthdayStatus(message, type) {
 
 function fillBirthdayForm(data) {
   document.getElementById('birthdayName').value = data.name || DEFAULT_BIRTHDAY.name;
+  document.getElementById('bookTitle').value = data.bookTitle || DEFAULT_BIRTHDAY.bookTitle;
   document.getElementById('birthdayPhotos').value = (data.photoData || DEFAULT_BIRTHDAY.photoData).map(p => p.url).join('\n');
   document.getElementById('birthdayFinalMessage').value = data.finalMessage || DEFAULT_BIRTHDAY.finalMessage;
   document.getElementById('birthdayFinalWishes').value = data.finalWishes || DEFAULT_BIRTHDAY.finalWishes;
@@ -446,6 +453,7 @@ async function updateBirthday() {
   const data = {
     password,
     name: document.getElementById('birthdayName').value || DEFAULT_BIRTHDAY.name,
+    bookTitle: document.getElementById('bookTitle').value || DEFAULT_BIRTHDAY.bookTitle,
     photoData: photoUrls.length ? photoUrls.map(url => ({ url })) : DEFAULT_BIRTHDAY.photoData,
     finalMessage: document.getElementById('birthdayFinalMessage').value || DEFAULT_BIRTHDAY.finalMessage,
     finalWishes: document.getElementById('birthdayFinalWishes').value || DEFAULT_BIRTHDAY.finalWishes

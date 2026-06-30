@@ -873,7 +873,7 @@
     <div id="book">
       <div class="page cover">
         <div class="front has-text">
-          <h1>Anita's Memory Book ❤️</h1>
+          <h1 id="bookCoverTitle">Anita's Memory Book ❤️</h1>
           <p style="font-size: 14px; opacity: 0.7; margin-top: 8px;">Swipe left to open</p>
           <span class="page-number">1</span>
         </div>
@@ -952,6 +952,7 @@
 <script>
 const DEFAULT_CONFIG = {
   name: 'ANITA',
+  bookTitle: "Anita's Memory Book ❤️",
   photoData: [
     { url: 'https://picsum.photos/400?random=1' },
     { url: 'https://picsum.photos/400?random=2' },
@@ -985,6 +986,8 @@ async function loadConfig() {
     console.log('Using default birthday config');
   }
   document.getElementById('nameLine').textContent = CONFIG.name;
+  const coverTitleEl = document.getElementById('bookCoverTitle');
+  if (coverTitleEl) coverTitleEl.textContent = CONFIG.bookTitle;
 }
 
 document.getElementById('nameLine').textContent = CONFIG.name;
@@ -1460,13 +1463,13 @@ async function runCard() {
   let currentPage = 0;
   
   const pageMessages = [
-    'Welcome to Anita\'s Memory Book ❤️',
+    `Welcome to ${CONFIG.bookTitle}`,
     'Memory One ❤️',
     'Memory Two ❤️',
     'Memory Three ❤️',
     'Memory Four ❤️',
     'Final Memory ❤️',
-    '🎉 Happy Birthday Anita 🎉'
+    CONFIG.finalMessage
   ];
   
   function updateBookMessage() {

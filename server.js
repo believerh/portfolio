@@ -25,6 +25,7 @@ const DEFAULT_PROFILE = {
 
 const DEFAULT_BIRTHDAY = {
   name: "ANITA",
+  bookTitle: "Anita's Memory Book ❤️",
   photoData: [
     { url: 'https://picsum.photos/400?random=1' },
     { url: 'https://picsum.photos/400?random=2' },
