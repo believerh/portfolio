@@ -330,9 +330,147 @@ color: var(--accent);
 
 <div class="status" id="status"></div>
 </div>
+
+<div class="admin-card" style="margin-top: 40px;">
+<div class="header" style="margin-bottom: 30px;">
+<h1 style="font-size: 1.8rem;">🎂 Birthday Page</h1>
+<p>Edit the content shown on birthday.html</p>
+</div>
+
+<div class="info-box">
+<strong>Instructions:</strong> Changes here update <code>birthday.html</code> live (no redeploy needed) once it's hosted alongside this server.
+</div>
+
+<div class="form-group">
+<label for="birthdayName">Name (shown on the page)</label>
+<input type="text" id="birthdayName" placeholder="e.g. ANITA">
+</div>
+
+<div class="form-group">
+<label for="birthdayPhotos">Photo URLs (one per line)</label>
+<textarea id="birthdayPhotos" placeholder="https://example.com/photo1.jpg"></textarea>
+</div>
+
+<div class="form-group">
+<label for="birthdayFinalMessage">Final Message</label>
+<input type="text" id="birthdayFinalMessage" placeholder="🎉 Happy Birthday Anita 🎉">
+</div>
+
+<div class="form-group">
+<label for="birthdayFinalWishes">Final Wishes</label>
+<textarea id="birthdayFinalWishes" placeholder="Thank you for being such an amazing person..."></textarea>
+</div>
+
+<div class="form-group">
+<label for="birthdayPassword">Admin Password</label>
+<input type="password" id="birthdayPassword" placeholder="Enter admin password">
+</div>
+
+<div class="button-group">
+<button class="btn btn-primary" onclick="updateBirthday()">
+<span>⬇</span> Update Birthday Page
+</button>
+<button class="btn btn-secondary" onclick="resetBirthdayForm()">
+<span>↺</span> Reset
+</button>
+</div>
+
+<div class="status" id="birthdayStatus"></div>
+</div>
 </div>
 
 <script>
+let currentBirthday = null;
+const DEFAULT_BIRTHDAY = {
+  name: 'ANITA',
+  photoData: [
+    { url: 'https://picsum.photos/400?random=1' },
+    { url: 'https://picsum.photos/400?random=2' },
+    { url: 'https://picsum.photos/400?random=3' },
+    { url: 'https://picsum.photos/400?random=4' },
+    { url: 'https://picsum.photos/400?random=5' },
+    { url: 'https://picsum.photos/400?random=6' },
+    { url: 'https://picsum.photos/400?random=7' },
+    { url: 'https://picsum.photos/400?random=8' },
+    { url: 'https://picsum.photos/400?random=9' },
+    { url: 'https://picsum.photos/400?random=10' }
+  ],
+  finalMessage: '🎉 Happy Birthday Anita 🎉',
+  finalWishes: 'Thank you for being such an amazing person. May God bless you with love, joy, and peace. ❤️'
+};
+
+function showBirthdayStatus(message, type) {
+  const status = document.getElementById('birthdayStatus');
+  status.textContent = message;
+  status.className = `status ${type}`;
+  status.style.display = 'block';
+  setTimeout(() => { status.style.display = 'none'; }, 4000);
+}
+
+function fillBirthdayForm(data) {
+  document.getElementById('birthdayName').value = data.name || DEFAULT_BIRTHDAY.name;
+  document.getElementById('birthdayPhotos').value = (data.photoData || DEFAULT_BIRTHDAY.photoData).map(p => p.url).join('\n');
+  document.getElementById('birthdayFinalMessage').value = data.finalMessage || DEFAULT_BIRTHDAY.finalMessage;
+  document.getElementById('birthdayFinalWishes').value = data.finalWishes || DEFAULT_BIRTHDAY.finalWishes;
+}
+
+function resetBirthdayForm() {
+  fillBirthdayForm(DEFAULT_BIRTHDAY);
+  showBirthdayStatus('Birthday form reset to defaults', 'success');
+}
+
+async function loadBirthday() {
+  try {
+    const res = await fetch('/api/birthday');
+    if (!res.ok) throw new Error('Failed to load');
+    currentBirthday = await res.json();
+    fillBirthdayForm(currentBirthday);
+  } catch (e) {
+    console.log('Using default birthday data');
+    fillBirthdayForm(DEFAULT_BIRTHDAY);
+  }
+}
+
+async function updateBirthday() {
+  const password = document.getElementById('birthdayPassword').value;
+  if (!password) {
+    showBirthdayStatus('Please enter the admin password', 'error');
+    return;
+  }
+
+  const photoUrls = document.getElementById('birthdayPhotos').value
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const data = {
+    password,
+    name: document.getElementById('birthdayName').value || DEFAULT_BIRTHDAY.name,
+    photoData: photoUrls.length ? photoUrls.map(url => ({ url })) : DEFAULT_BIRTHDAY.photoData,
+    finalMessage: document.getElementById('birthdayFinalMessage').value || DEFAULT_BIRTHDAY.finalMessage,
+    finalWishes: document.getElementById('birthdayFinalWishes').value || DEFAULT_BIRTHDAY.finalWishes
+  };
+
+  try {
+    const res = await fetch('/api/birthday', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Failed to update');
+
+    currentBirthday = data;
+    showBirthdayStatus('✓ Birthday page updated successfully! Changes are live.', 'success');
+  } catch (error) {
+    showBirthdayStatus('Error: ' + error.message, 'error');
+  }
+}
+
+loadBirthday();
+</script>
+
 let uploadedImageData = null;
 
 document.getElementById('profilePic').addEventListener('change', function(e) {
