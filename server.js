@@ -16,6 +16,8 @@ const DEFAULT_PROFILE = {
   avatar: null,
   github: "https://github.com/believerrh",
   whatsapp: "https://wa.me/233534970884",
+  botFilesLink: "https://github.com/believerh/CypherX/archive/refs/heads/main.zip",
+  pairDeviceLink: "https://pair.cypherxbot.space/",
   stats: {
     projects: "42+",
     commits: "8.2K",

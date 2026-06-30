@@ -617,6 +617,10 @@ async function loadProfile() {
     if (gh) gh.href = data.github || '#';
     const wa = document.getElementById('whatsapp-link');
     if (wa) wa.href = data.whatsapp || '#';
+    const bf = document.getElementById('get-bot-files-link');
+    if (bf) bf.href = data.botFilesLink || '#';
+    const pd = document.getElementById('pair-device-link');
+    if (pd) pd.href = data.pairDeviceLink || '#';
     
     if (data.stats) {
       const pe = document.getElementById('stat-projects');

@@ -315,6 +315,16 @@ color: var(--accent);
 </div>
 
 <div class="form-group">
+<label for="botFilesLink">Get Bot Files Link</label>
+<input type="text" id="botFilesLink" value="https://github.com/believerh/CypherX/archive/refs/heads/main.zip" placeholder="https://github.com/user/repo/archive/refs/heads/main.zip">
+</div>
+
+<div class="form-group">
+<label for="pairDeviceLink">Pair Device Link</label>
+<input type="text" id="pairDeviceLink" value="https://pair.cypherxbot.space/" placeholder="https://pair.example.com/">
+</div>
+
+<div class="form-group">
 <label for="adminPassword">Admin Password</label>
 <input type="password" id="adminPassword" placeholder="Enter admin password" value="admin123">
 </div>
@@ -500,6 +510,8 @@ document.getElementById('profileRole').value = 'Programmer and Developer';
 document.getElementById('profileBio').value = 'Building the future, one commit at a time. Passionate about crafting seamless digital experiences with cutting-edge technology and minimalist design.';
 document.getElementById('githubLink').value = 'https://github.com/believerrh';
 document.getElementById('whatsappLink').value = 'https://wa.me/233534970884';
+document.getElementById('botFilesLink').value = 'https://github.com/believerh/CypherX/archive/refs/heads/main.zip';
+document.getElementById('pairDeviceLink').value = 'https://pair.cypherxbot.space/';
 document.getElementById('avatarPreview').innerHTML = '👨‍💻';
 uploadedImageData = null;
 document.getElementById('fileName').textContent = '';
@@ -525,6 +537,8 @@ async function loadProfile() {
     document.getElementById('profileBio').value = currentProfile.bio || '';
     document.getElementById('githubLink').value = currentProfile.github || 'https://github.com/believerrh';
     document.getElementById('whatsappLink').value = currentProfile.whatsapp || 'https://wa.me/233534970884';
+    document.getElementById('botFilesLink').value = currentProfile.botFilesLink || 'https://github.com/believerh/CypherX/archive/refs/heads/main.zip';
+    document.getElementById('pairDeviceLink').value = currentProfile.pairDeviceLink || 'https://pair.cypherxbot.space/';
     
     if (currentProfile.avatar) {
       uploadedImageData = currentProfile.avatar;
@@ -553,6 +567,8 @@ async function updateProfile() {
     avatar: uploadedImageData,
     github: document.getElementById('githubLink').value || 'https://github.com/username',
     whatsapp: document.getElementById('whatsappLink').value || 'https://wa.me/1234567890',
+    botFilesLink: document.getElementById('botFilesLink').value || 'https://github.com/believerh/CypherX/archive/refs/heads/main.zip',
+    pairDeviceLink: document.getElementById('pairDeviceLink').value || 'https://pair.cypherxbot.space/',
     stats: currentProfile?.stats || { projects: "42+", commits: "8.2K", online: "24/7" }
   };
 

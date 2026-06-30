@@ -1008,42 +1008,73 @@ function initAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     musicGain = audioCtx.createGain();
-    musicGain.gain.value = 0.03;
+    musicGain.gain.value = 0.05;
     musicGain.connect(audioCtx.destination);
   }
 }
 
-function startSoftMusic() {
-  initAudio();
-  if (isPlaying) return;
-  isPlaying = true;
-  
-  const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88];
+// "Happy Birthday to You" melody (public domain), in key of C
+const BIRTHDAY_BPM = 105;
+const BIRTHDAY_BEAT_SEC = 60 / BIRTHDAY_BPM;
+const BIRTHDAY_MELODY = [
+  { freq: 392.00, beats: 0.5 }, { freq: 392.00, beats: 0.5 }, { freq: 440.00, beats: 1 },
+  { freq: 392.00, beats: 1 }, { freq: 523.25, beats: 1 }, { freq: 493.88, beats: 2 },
+
+  { freq: 392.00, beats: 0.5 }, { freq: 392.00, beats: 0.5 }, { freq: 440.00, beats: 1 },
+  { freq: 392.00, beats: 1 }, { freq: 587.33, beats: 1 }, { freq: 523.25, beats: 2 },
+
+  { freq: 392.00, beats: 0.5 }, { freq: 392.00, beats: 0.5 }, { freq: 783.99, beats: 1 },
+  { freq: 659.25, beats: 1 }, { freq: 523.25, beats: 1 }, { freq: 493.88, beats: 1 }, { freq: 440.00, beats: 2 },
+
+  { freq: 698.46, beats: 0.5 }, { freq: 698.46, beats: 0.5 }, { freq: 659.25, beats: 1 },
+  { freq: 523.25, beats: 1 }, { freq: 587.33, beats: 1 }, { freq: 523.25, beats: 2 }
+];
+
+let melodyTimeoutId = null;
+
+function scheduleMelody() {
+  if (!isPlaying) return;
   const now = audioCtx.currentTime;
-  
-  notes.forEach((freq, i) => {
+  let t = now;
+
+  BIRTHDAY_MELODY.forEach(({ freq, beats }) => {
+    const dur = beats * BIRTHDAY_BEAT_SEC;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = 'sine';
     osc.frequency.value = freq;
-    gain.gain.value = 0;
-    gain.gain.setValueAtTime(0, now + i * 2);
-    gain.gain.linearRampToValueAtTime(0.015, now + i * 2 + 1);
-    gain.gain.linearRampToValueAtTime(0, now + i * 2 + 3);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.05, t + 0.04);
+    gain.gain.linearRampToValueAtTime(0.05, t + dur * 0.7);
+    gain.gain.linearRampToValueAtTime(0, t + dur * 0.95);
     osc.connect(gain);
     gain.connect(musicGain);
-    osc.start(now + i * 2);
-    osc.stop(now + i * 2 + 3.5);
+    osc.start(t);
+    osc.stop(t + dur);
     musicOscillators.push(osc);
+    t += dur;
   });
-  
-  setTimeout(() => {
-    if (isPlaying) startSoftMusic();
-  }, 8000);
+
+  const totalDur = t - now;
+  melodyTimeoutId = setTimeout(() => {
+    if (isPlaying) scheduleMelody();
+  }, (totalDur + 2.5) * 1000);
+}
+
+function startSoftMusic() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (isPlaying) return;
+  isPlaying = true;
+  scheduleMelody();
 }
 
 function stopSoftMusic() {
   isPlaying = false;
+  if (melodyTimeoutId) {
+    clearTimeout(melodyTimeoutId);
+    melodyTimeoutId = null;
+  }
   musicOscillators.forEach(osc => {
     try { osc.stop(); } catch(e) {}
   });
