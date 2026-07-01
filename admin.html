@@ -412,6 +412,163 @@ font-size: 0.7rem;
 display: flex;
 }
 
+.custom-color-panel {
+margin-top: 16px;
+padding: 18px;
+background: rgba(255, 255, 255, 0.02);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+display: none;
+}
+
+.custom-color-panel.show {
+display: block;
+}
+
+.custom-color-panel p {
+font-size: 0.85rem;
+color: var(--text-muted);
+margin-bottom: 14px;
+line-height: 1.5;
+}
+
+.custom-color-list {
+display: flex;
+flex-wrap: wrap;
+gap: 12px;
+margin-bottom: 14px;
+}
+
+.custom-color-chip {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 10px;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 10px;
+}
+
+.custom-color-chip input[type="color"] {
+width: 36px;
+height: 36px;
+padding: 0;
+border: none;
+border-radius: 8px;
+background: none;
+cursor: pointer;
+}
+
+.custom-color-chip button {
+width: 24px;
+height: 24px;
+border-radius: 6px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+background: rgba(239, 68, 68, 0.1);
+color: var(--danger);
+cursor: pointer;
+font-size: 0.75rem;
+line-height: 1;
+}
+
+.custom-color-chip button:disabled {
+opacity: 0.3;
+cursor: not-allowed;
+}
+
+.btn-add-color {
+padding: 10px 16px;
+border-radius: 10px;
+border: 2px dashed rgba(255, 255, 255, 0.15);
+background: transparent;
+color: var(--text-muted);
+cursor: pointer;
+font-family: inherit;
+font-size: 0.85rem;
+transition: all 0.2s ease;
+}
+
+.btn-add-color:hover {
+border-color: var(--primary);
+color: var(--text);
+background: rgba(99, 102, 241, 0.05);
+}
+
+.btn-add-color:disabled {
+opacity: 0.4;
+cursor: not-allowed;
+}
+
+.page-row {
+display: flex;
+align-items: center;
+gap: 14px;
+padding: 14px;
+background: rgba(255, 255, 255, 0.02);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+}
+
+.page-row-main {
+flex: 1;
+min-width: 0;
+}
+
+.page-row-main strong {
+display: block;
+color: var(--text);
+font-size: 0.95rem;
+margin-bottom: 2px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+
+.page-row-main span {
+font-size: 0.8rem;
+color: var(--text-muted);
+}
+
+.page-row-actions {
+display: flex;
+gap: 6px;
+flex-shrink: 0;
+}
+
+.page-row-actions a,
+.page-row-actions button {
+width: 34px;
+height: 34px;
+border-radius: 8px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+background: rgba(255, 255, 255, 0.03);
+color: var(--text);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 0.9rem;
+text-decoration: none;
+transition: all 0.2s ease;
+}
+
+.page-row-actions a:hover {
+background: rgba(99, 102, 241, 0.15);
+border-color: var(--primary);
+}
+
+.page-row-actions button:hover {
+background: rgba(239, 68, 68, 0.15);
+border-color: var(--danger);
+}
+
+.empty-note {
+color: var(--text-muted);
+font-size: 0.9rem;
+text-align: center;
+padding: 20px 0;
+}
+
 @media (max-width: 640px) {
 .admin-card { padding: 30px 25px; }
 .header h1 { font-size: 2rem; }
@@ -521,6 +678,11 @@ display: flex;
 <div class="form-group">
 <label>Theme</label>
 <div class="theme-grid" id="themeGrid"></div>
+<div class="custom-color-panel" id="customColorPanel">
+<p>Pick as many colors as you like — the page background, glow, and accents are all generated from them.</p>
+<div class="custom-color-list" id="customColorList"></div>
+<button type="button" class="btn-add-color" id="addColorBtn" onclick="addCustomColor()">+ Add Color</button>
+</div>
 </div>
 
 <div class="form-group">
@@ -559,6 +721,31 @@ display: flex;
 
 <div class="status" id="birthdayStatus"></div>
 </div>
+
+<div class="admin-card" style="margin-top: 40px;">
+<div class="header" style="margin-bottom: 30px;">
+<h1 style="font-size: 1.8rem;">🎁 Custom Birthday Pages</h1>
+<p>Pages made by visitors via "Make Your Own"</p>
+</div>
+
+<div class="info-box">
+<strong>Instructions:</strong> Enter the admin password and click <strong>Load Pages</strong> to see every personalized page that's been created. Open a page to preview it, or delete it permanently.
+</div>
+
+<div class="form-group">
+<label for="pagesPassword">Admin Password</label>
+<input type="password" id="pagesPassword" placeholder="Enter admin password">
+</div>
+
+<div class="button-group" style="margin-top: 0; margin-bottom: 24px;">
+<button class="btn btn-primary" onclick="loadBirthdayPages()">
+<span>⟳</span> Load Pages
+</button>
+</div>
+
+<div id="pagesList"></div>
+<div class="status" id="pagesStatus"></div>
+</div>
 </div>
 
 <script>
@@ -573,6 +760,15 @@ const THEME_PRESETS = {
 };
 
 let selectedTheme = 'purple';
+let customColors = ['#b066ff', '#7fd8ff'];
+const MAX_CUSTOM_COLORS = 6;
+
+function customSwatchGradient() {
+  const colors = customColors.length ? customColors : ['#b066ff', '#7fd8ff'];
+  return colors.length === 1
+    ? colors[0]
+    : `linear-gradient(135deg, ${colors.join(', ')})`;
+}
 
 function renderThemeGrid() {
   const grid = document.getElementById('themeGrid');
@@ -592,6 +788,63 @@ function renderThemeGrid() {
     `;
     grid.appendChild(swatch);
   });
+
+  const customSwatch = document.createElement('div');
+  customSwatch.className = 'theme-swatch' + (selectedTheme === 'custom' ? ' selected' : '');
+  customSwatch.onclick = () => {
+    selectedTheme = 'custom';
+    renderThemeGrid();
+    renderCustomColorList();
+  };
+  customSwatch.innerHTML = `
+    <div class="theme-swatch-check">✓</div>
+    <div class="theme-swatch-preview" style="background:${customSwatchGradient()}"></div>
+    <div class="theme-swatch-name">🎨 Custom</div>
+  `;
+  grid.appendChild(customSwatch);
+
+  document.getElementById('customColorPanel').classList.toggle('show', selectedTheme === 'custom');
+}
+
+function renderCustomColorList() {
+  const list = document.getElementById('customColorList');
+  list.innerHTML = '';
+  customColors.forEach((color, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'custom-color-chip';
+
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = color;
+    input.addEventListener('input', (e) => {
+      customColors[index] = e.target.value;
+      renderThemeGrid();
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '✕';
+    removeBtn.disabled = customColors.length <= 1;
+    removeBtn.onclick = () => {
+      if (customColors.length <= 1) return;
+      customColors.splice(index, 1);
+      renderCustomColorList();
+      renderThemeGrid();
+    };
+
+    chip.appendChild(input);
+    chip.appendChild(removeBtn);
+    list.appendChild(chip);
+  });
+  document.getElementById('addColorBtn').disabled = customColors.length >= MAX_CUSTOM_COLORS;
+}
+
+function addCustomColor() {
+  if (customColors.length >= MAX_CUSTOM_COLORS) return;
+  const palette = ['#b066ff', '#ff6b9d', '#06b6d4', '#10b981', '#f97316', '#ef4444', '#facc15', '#64748b'];
+  customColors.push(palette[customColors.length % palette.length]);
+  renderCustomColorList();
+  renderThemeGrid();
 }
 
 let currentBirthday = null;
@@ -628,8 +881,10 @@ let activePhotoUploadIndex = null;
 
 function fillBirthdayForm(data) {
   document.getElementById('birthdayName').value = data.name || DEFAULT_BIRTHDAY.name;
-  selectedTheme = (data.theme && THEME_PRESETS[data.theme]) ? data.theme : DEFAULT_BIRTHDAY.theme;
+  selectedTheme = (data.theme && (THEME_PRESETS[data.theme] || data.theme === 'custom')) ? data.theme : DEFAULT_BIRTHDAY.theme;
+  customColors = (Array.isArray(data.customColors) && data.customColors.length) ? data.customColors.slice() : ['#b066ff', '#7fd8ff'];
   renderThemeGrid();
+  renderCustomColorList();
   document.getElementById('bookTitle').value = data.bookTitle || DEFAULT_BIRTHDAY.bookTitle;
   birthdayPhotos = (data.photoData && data.photoData.length ? data.photoData : DEFAULT_BIRTHDAY.photoData).map(p => ({ url: p.url || '' }));
   renderPhotoList();
@@ -774,6 +1029,7 @@ async function updateBirthday() {
     password,
     name: document.getElementById('birthdayName').value || DEFAULT_BIRTHDAY.name,
     theme: selectedTheme,
+    customColors: selectedTheme === 'custom' ? customColors : [],
     bookTitle: document.getElementById('bookTitle').value || DEFAULT_BIRTHDAY.bookTitle,
     photoData: photoEntries.length ? photoEntries : DEFAULT_BIRTHDAY.photoData,
     finalMessage: document.getElementById('birthdayFinalMessage').value || DEFAULT_BIRTHDAY.finalMessage,
@@ -798,6 +1054,103 @@ async function updateBirthday() {
 }
 
 loadBirthday();
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function showPagesStatus(message, type) {
+  const status = document.getElementById('pagesStatus');
+  status.textContent = message;
+  status.className = `status ${type}`;
+  status.style.display = 'block';
+  setTimeout(() => { status.style.display = 'none'; }, 4000);
+}
+
+async function loadBirthdayPages() {
+  const password = document.getElementById('pagesPassword').value;
+  if (!password) {
+    showPagesStatus('Please enter the admin password', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/birthday-pages/list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Failed to load pages');
+    renderPagesList(result.pages || []);
+  } catch (error) {
+    showPagesStatus('Error: ' + error.message, 'error');
+  }
+}
+
+function renderPagesList(pages) {
+  const container = document.getElementById('pagesList');
+  container.innerHTML = '';
+
+  if (!pages.length) {
+    container.innerHTML = '<p class="empty-note">No custom pages have been created yet.</p>';
+    return;
+  }
+
+  pages
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .forEach(page => {
+      const row = document.createElement('div');
+      row.className = 'page-row';
+
+      const created = page.createdAt ? new Date(page.createdAt).toLocaleString() : 'unknown date';
+      const themeLabel = (THEME_PRESETS[page.theme] && THEME_PRESETS[page.theme].label) || (page.theme === 'custom' ? 'Custom' : page.theme);
+
+      row.innerHTML = `
+        <div class="page-row-main">
+          <strong>${escapeHtml(page.name)}</strong>
+          <span>${escapeHtml(themeLabel)} · ${escapeHtml(created)} · id: ${escapeHtml(page.id)}</span>
+        </div>
+        <div class="page-row-actions">
+          <a href="/birthday.html?id=${encodeURIComponent(page.id)}" target="_blank" title="Open page">↗</a>
+        </div>
+      `;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.title = 'Delete page';
+      deleteBtn.textContent = '✕';
+      deleteBtn.onclick = () => deleteBirthdayPage(page.id, page.name);
+      row.querySelector('.page-row-actions').appendChild(deleteBtn);
+
+      container.appendChild(row);
+    });
+}
+
+async function deleteBirthdayPage(id, name) {
+  const password = document.getElementById('pagesPassword').value;
+  if (!password) {
+    showPagesStatus('Please enter the admin password', 'error');
+    return;
+  }
+  if (!confirm(`Delete "${name || 'this page'}"? This cannot be undone.`)) return;
+
+  try {
+    const res = await fetch('/api/birthday-pages/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, id })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Failed to delete page');
+    showPagesStatus('✓ Page deleted', 'success');
+    loadBirthdayPages();
+  } catch (error) {
+    showPagesStatus('Error: ' + error.message, 'error');
+  }
+}
 
 
 let uploadedImageData = null;

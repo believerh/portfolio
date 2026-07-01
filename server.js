@@ -109,6 +109,9 @@ app.post('/api/birthday', (req, res) => {
   }
 
   try {
+    if (birthdayData.theme === 'custom') {
+      birthdayData.customColors = sanitizeCustomColors(birthdayData.customColors);
+    }
     fs.writeFileSync(BIRTHDAY_DATA_FILE, JSON.stringify(birthdayData, null, 2));
     res.json({ success: true, message: 'Birthday page updated successfully' });
   } catch (error) {
@@ -120,10 +123,20 @@ app.post('/api/birthday', (req, res) => {
 // These are separate from the single shared birthday.html/birthday-data.json
 // that admin.html edits. Anyone can create one here; no admin password needed.
 
-const THEME_KEYS = ['purple', 'roseGold', 'ocean', 'emerald', 'sunset', 'crimson', 'silver'];
+const THEME_KEYS = ['purple', 'roseGold', 'ocean', 'emerald', 'sunset', 'crimson', 'silver', 'custom'];
 
 function isValidBirthdayId(id) {
   return typeof id === 'string' && /^[a-f0-9]{10}$/.test(id);
+}
+
+function isValidHexColor(c) {
+  return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c);
+}
+
+// A "custom" theme can carry multiple user-picked colors (not just one).
+function sanitizeCustomColors(colors) {
+  if (!Array.isArray(colors)) return [];
+  return colors.filter(isValidHexColor).slice(0, 8);
 }
 
 app.get('/api/birthday/:id', (req, res) => {
@@ -144,7 +157,7 @@ app.get('/api/birthday/:id', (req, res) => {
 });
 
 app.post('/api/birthday/create', (req, res) => {
-  const { name, theme, bookTitle, photoData, finalMessage, finalWishes } = req.body || {};
+  const { name, theme, customColors, bookTitle, photoData, finalMessage, finalWishes } = req.body || {};
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'Name is required' });
@@ -153,6 +166,7 @@ app.post('/api/birthday/create', (req, res) => {
   const pageData = {
     name: name.trim(),
     theme: (theme && THEME_KEYS.includes(theme)) ? theme : 'purple',
+    customColors: sanitizeCustomColors(customColors),
     bookTitle: (bookTitle && bookTitle.trim()) || `${name.trim()}'s Memory Book ❤️`,
     photoData: (Array.isArray(photoData) && photoData.length)
       ? photoData.filter(p => p && typeof p.url === 'string' && p.url.trim()).map(p => ({ url: p.url.trim() }))
@@ -172,6 +186,56 @@ app.post('/api/birthday/create', (req, res) => {
     res.json({ success: true, id, url: `/birthday.html?id=${id}` });
   } catch (error) {
     res.status(500).json({ error: 'Failed to save page data' });
+  }
+});
+
+// --- Admin management of personalized birthday pages ---
+
+app.post('/api/birthday-pages/list', (req, res) => {
+  const { password } = req.body || {};
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const files = fs.readdirSync(BIRTHDAY_PAGES_DIR).filter(f => f.endsWith('.json'));
+    const pages = files.map(f => {
+      const id = f.replace(/\.json$/, '');
+      try {
+        const data = JSON.parse(fs.readFileSync(path.join(BIRTHDAY_PAGES_DIR, f), 'utf8'));
+        return {
+          id,
+          name: data.name || '',
+          theme: data.theme || 'purple',
+          bookTitle: data.bookTitle || '',
+          createdAt: data.createdAt || null
+        };
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean);
+    res.json({ success: true, pages });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to list birthday pages' });
+  }
+});
+
+app.post('/api/birthday-pages/delete', (req, res) => {
+  const { password, id } = req.body || {};
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (!isValidBirthdayId(id)) {
+    return res.status(400).json({ error: 'Invalid page id' });
+  }
+  const filePath = path.join(BIRTHDAY_PAGES_DIR, `${id}.json`);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Page not found' });
+  }
+  try {
+    fs.unlinkSync(filePath);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete birthday page' });
   }
 });
 

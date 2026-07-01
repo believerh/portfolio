@@ -266,6 +266,93 @@ font-size: 0.7rem;
 display: flex;
 }
 
+.custom-color-panel {
+margin-top: 16px;
+padding: 18px;
+background: rgba(255, 255, 255, 0.02);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+display: none;
+}
+
+.custom-color-panel.show {
+display: block;
+}
+
+.custom-color-panel p {
+font-size: 0.85rem;
+color: var(--text-muted);
+margin-bottom: 14px;
+line-height: 1.5;
+}
+
+.custom-color-list {
+display: flex;
+flex-wrap: wrap;
+gap: 12px;
+margin-bottom: 14px;
+}
+
+.custom-color-chip {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 10px;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 10px;
+}
+
+.custom-color-chip input[type="color"] {
+width: 36px;
+height: 36px;
+padding: 0;
+border: none;
+border-radius: 8px;
+background: none;
+cursor: pointer;
+}
+
+.custom-color-chip button {
+width: 24px;
+height: 24px;
+border-radius: 6px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+background: rgba(239, 68, 68, 0.1);
+color: var(--danger);
+cursor: pointer;
+font-size: 0.75rem;
+line-height: 1;
+}
+
+.custom-color-chip button:disabled {
+opacity: 0.3;
+cursor: not-allowed;
+}
+
+.btn-add-color {
+padding: 10px 16px;
+border-radius: 10px;
+border: 2px dashed rgba(255, 255, 255, 0.15);
+background: transparent;
+color: var(--text-muted);
+cursor: pointer;
+font-family: inherit;
+font-size: 0.85rem;
+transition: all 0.2s ease;
+}
+
+.btn-add-color:hover {
+border-color: var(--primary);
+color: var(--text);
+background: rgba(99, 102, 241, 0.05);
+}
+
+.btn-add-color:disabled {
+opacity: 0.4;
+cursor: not-allowed;
+}
+
 .button-group {
 display: flex;
 gap: 16px;
@@ -430,6 +517,11 @@ outline: none;
 <div class="form-group">
 <label>Theme</label>
 <div class="theme-grid" id="themeGrid"></div>
+<div class="custom-color-panel" id="customColorPanel">
+<p>Pick as many colors as you like — the page background, glow, and accents are all generated from them.</p>
+<div class="custom-color-list" id="customColorList"></div>
+<button type="button" class="btn-add-color" id="addColorBtn" onclick="addCustomColor()">+ Add Color</button>
+</div>
 </div>
 
 <div class="form-group">
@@ -495,6 +587,15 @@ const THEME_PRESETS = {
 };
 
 let selectedTheme = 'purple';
+let customColors = ['#b066ff', '#7fd8ff'];
+const MAX_CUSTOM_COLORS = 6;
+
+function customSwatchGradient() {
+  const colors = customColors.length ? customColors : ['#b066ff', '#7fd8ff'];
+  return colors.length === 1
+    ? colors[0]
+    : `linear-gradient(135deg, ${colors.join(', ')})`;
+}
 
 function renderThemeGrid() {
   const grid = document.getElementById('themeGrid');
@@ -514,8 +615,67 @@ function renderThemeGrid() {
     `;
     grid.appendChild(swatch);
   });
+
+  // "Custom" tile lets someone build their own theme from multiple colors
+  const customSwatch = document.createElement('div');
+  customSwatch.className = 'theme-swatch' + (selectedTheme === 'custom' ? ' selected' : '');
+  customSwatch.onclick = () => {
+    selectedTheme = 'custom';
+    renderThemeGrid();
+    renderCustomColorList();
+  };
+  customSwatch.innerHTML = `
+    <div class="theme-swatch-check">✓</div>
+    <div class="theme-swatch-preview" style="background:${customSwatchGradient()}"></div>
+    <div class="theme-swatch-name">🎨 Custom</div>
+  `;
+  grid.appendChild(customSwatch);
+
+  document.getElementById('customColorPanel').classList.toggle('show', selectedTheme === 'custom');
 }
 renderThemeGrid();
+
+function renderCustomColorList() {
+  const list = document.getElementById('customColorList');
+  list.innerHTML = '';
+  customColors.forEach((color, index) => {
+    const chip = document.createElement('div');
+    chip.className = 'custom-color-chip';
+
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = color;
+    input.addEventListener('input', (e) => {
+      customColors[index] = e.target.value;
+      renderThemeGrid();
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '✕';
+    removeBtn.disabled = customColors.length <= 1;
+    removeBtn.onclick = () => {
+      if (customColors.length <= 1) return;
+      customColors.splice(index, 1);
+      renderCustomColorList();
+      renderThemeGrid();
+    };
+
+    chip.appendChild(input);
+    chip.appendChild(removeBtn);
+    list.appendChild(chip);
+  });
+  document.getElementById('addColorBtn').disabled = customColors.length >= MAX_CUSTOM_COLORS;
+}
+renderCustomColorList();
+
+function addCustomColor() {
+  if (customColors.length >= MAX_CUSTOM_COLORS) return;
+  const palette = ['#b066ff', '#ff6b9d', '#06b6d4', '#10b981', '#f97316', '#ef4444', '#facc15', '#64748b'];
+  customColors.push(palette[customColors.length % palette.length]);
+  renderCustomColorList();
+  renderThemeGrid();
+}
 
 const DEFAULT_PHOTOS = [
   { url: 'https://picsum.photos/400?random=1' },
@@ -640,7 +800,9 @@ function resetBirthdayForm() {
   document.getElementById('birthdayFinalMessage').value = '';
   document.getElementById('birthdayFinalWishes').value = '';
   selectedTheme = 'purple';
+  customColors = ['#b066ff', '#7fd8ff'];
   renderThemeGrid();
+  renderCustomColorList();
   birthdayPhotos = DEFAULT_PHOTOS.map(p => ({ url: p.url }));
   renderPhotoList();
   showBirthdayStatus('Form reset', 'success');
@@ -670,6 +832,7 @@ async function createBirthdayPage() {
   const data = {
     name,
     theme: selectedTheme,
+    customColors: selectedTheme === 'custom' ? customColors : [],
     bookTitle: document.getElementById('bookTitle').value.trim(),
     photoData: photoEntries,
     finalMessage: document.getElementById('birthdayFinalMessage').value.trim(),
