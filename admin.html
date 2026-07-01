@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profile Admin Panel</title>
+<script src="/protect.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -640,7 +641,7 @@ padding: 20px 0;
 
 <div class="form-group">
 <label for="adminPassword">Admin Password</label>
-<input type="password" id="adminPassword" placeholder="Enter admin password" value="admin123">
+<input type="password" id="adminPassword" placeholder="Enter admin password">
 </div>
 
 <div class="button-group">
@@ -1107,11 +1108,14 @@ function renderPagesList(pages) {
 
       const created = page.createdAt ? new Date(page.createdAt).toLocaleString() : 'unknown date';
       const themeLabel = (THEME_PRESETS[page.theme] && THEME_PRESETS[page.theme].label) || (page.theme === 'custom' ? 'Custom' : page.theme);
+      const paidLabel = page.payment
+        ? `paid ${page.payment.currency} ${(page.payment.amount / 100).toFixed(2)}${page.payment.email ? ' · ' + page.payment.email : ''}`
+        : 'no payment on record';
 
       row.innerHTML = `
         <div class="page-row-main">
           <strong>${escapeHtml(page.name)}</strong>
-          <span>${escapeHtml(themeLabel)} · ${escapeHtml(created)} · id: ${escapeHtml(page.id)}</span>
+          <span>${escapeHtml(themeLabel)} · ${escapeHtml(created)} · ${escapeHtml(paidLabel)}</span>
         </div>
         <div class="page-row-actions">
           <a href="/birthday.html?id=${encodeURIComponent(page.id)}" target="_blank" title="Open page">↗</a>
