@@ -950,8 +950,116 @@
 <button class="music-btn" id="musicBtn" title="Play/Pause Music">🎵</button>
 
 <script>
+const THEME_PRESETS = {
+  purple: {
+    '--rose-primary': '#b066ff',
+    '--rose-light': '#c9a3ff',
+    '--rose-glow': 'rgba(176, 102, 255, 0.6)',
+    '--rose-dark': '#140a2a',
+    '--gold': '#7fd8ff',
+    '--gold-light': '#b3eaff',
+    '--bg-deep': '#07060f',
+    '--bg-card': 'rgba(26, 5, 16, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#ffe5ec',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  },
+  roseGold: {
+    '--rose-primary': '#ff6b9d',
+    '--rose-light': '#ffb3d1',
+    '--rose-glow': 'rgba(255, 107, 157, 0.6)',
+    '--rose-dark': '#2a0a14',
+    '--gold': '#ffd700',
+    '--gold-light': '#ffe999',
+    '--bg-deep': '#0f0609',
+    '--bg-card': 'rgba(26, 10, 15, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#fff0e5',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  },
+  ocean: {
+    '--rose-primary': '#06b6d4',
+    '--rose-light': '#67e8f9',
+    '--rose-glow': 'rgba(6, 182, 212, 0.6)',
+    '--rose-dark': '#051a2a',
+    '--gold': '#3b82f6',
+    '--gold-light': '#93c5fd',
+    '--bg-deep': '#050a14',
+    '--bg-card': 'rgba(5, 15, 26, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#e0f7ff',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  },
+  emerald: {
+    '--rose-primary': '#10b981',
+    '--rose-light': '#6ee7b7',
+    '--rose-glow': 'rgba(16, 185, 129, 0.6)',
+    '--rose-dark': '#052015',
+    '--gold': '#fbbf24',
+    '--gold-light': '#fde68a',
+    '--bg-deep': '#050f0a',
+    '--bg-card': 'rgba(5, 20, 15, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#e5ffe9',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  },
+  sunset: {
+    '--rose-primary': '#f97316',
+    '--rose-light': '#fdba74',
+    '--rose-glow': 'rgba(249, 115, 22, 0.6)',
+    '--rose-dark': '#2a0f05',
+    '--gold': '#facc15',
+    '--gold-light': '#fde68a',
+    '--bg-deep': '#140a05',
+    '--bg-card': 'rgba(26, 12, 5, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#ffe9d5',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  },
+  crimson: {
+    '--rose-primary': '#ef4444',
+    '--rose-light': '#fca5a5',
+    '--rose-glow': 'rgba(239, 68, 68, 0.6)',
+    '--rose-dark': '#200505',
+    '--gold': '#fbbf24',
+    '--gold-light': '#fde68a',
+    '--bg-deep': '#0f0505',
+    '--bg-card': 'rgba(20, 5, 5, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#ffe5e5',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  },
+  silver: {
+    '--rose-primary': '#64748b',
+    '--rose-light': '#cbd5e1',
+    '--rose-glow': 'rgba(100, 116, 139, 0.6)',
+    '--rose-dark': '#0a0e14',
+    '--gold': '#94a3b8',
+    '--gold-light': '#e2e8f0',
+    '--bg-deep': '#05060a',
+    '--bg-card': 'rgba(10, 12, 18, 0.85)',
+    '--text-primary': '#fff',
+    '--text-secondary': '#f1f5f9',
+    '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+    '--glass-border': 'rgba(255, 255, 255, 0.08)'
+  }
+};
+
+function applyTheme(themeKey) {
+  const vars = THEME_PRESETS[themeKey] || THEME_PRESETS.purple;
+  const root = document.documentElement;
+  Object.keys(vars).forEach(name => root.style.setProperty(name, vars[name]));
+}
+
 const DEFAULT_CONFIG = {
   name: 'ANITA',
+  theme: 'purple',
   bookTitle: "Anita's Memory Book ❤️",
   photoData: [
     { url: 'https://picsum.photos/400?random=1' },
@@ -973,7 +1081,9 @@ let CONFIG = { ...DEFAULT_CONFIG };
 
 async function loadConfig() {
   try {
-    const res = await fetch('/api/birthday');
+    const pageId = new URLSearchParams(window.location.search).get('id');
+    const endpoint = pageId ? `/api/birthday/${encodeURIComponent(pageId)}` : '/api/birthday';
+    const res = await fetch(endpoint);
     if (res.ok) {
       const remote = await res.json();
       CONFIG = {
@@ -985,6 +1095,7 @@ async function loadConfig() {
   } catch (e) {
     console.log('Using default birthday config');
   }
+  applyTheme(CONFIG.theme);
   document.getElementById('nameLine').textContent = CONFIG.name;
   const coverTitleEl = document.getElementById('bookCoverTitle');
   if (coverTitleEl) coverTitleEl.textContent = CONFIG.bookTitle;

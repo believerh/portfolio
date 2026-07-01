@@ -255,6 +255,163 @@ line-height: 1.6;
 color: var(--accent);
 }
 
+.photo-list {
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+
+.photo-slot {
+display: flex;
+align-items: center;
+gap: 14px;
+padding: 14px;
+background: rgba(255, 255, 255, 0.02);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 12px;
+}
+
+.photo-thumb {
+width: 56px;
+height: 56px;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.05);
+border: 1px solid rgba(255, 255, 255, 0.1);
+overflow: hidden;
+flex-shrink: 0;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 1.2rem;
+color: var(--text-muted);
+}
+
+.photo-thumb img {
+width: 100%;
+height: 100%;
+object-fit: cover;
+}
+
+.photo-slot-main {
+flex: 1;
+min-width: 0;
+}
+
+.photo-slot-main input[type="text"] {
+padding: 10px 14px;
+font-size: 0.85rem;
+}
+
+.photo-slot-actions {
+display: flex;
+gap: 6px;
+flex-shrink: 0;
+}
+
+.btn-icon {
+width: 34px;
+height: 34px;
+border-radius: 8px;
+border: 1px solid rgba(255, 255, 255, 0.1);
+background: rgba(255, 255, 255, 0.03);
+color: var(--text);
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 0.9rem;
+transition: all 0.2s ease;
+flex-shrink: 0;
+}
+
+.btn-icon:hover {
+background: rgba(99, 102, 241, 0.15);
+border-color: var(--primary);
+}
+
+.btn-icon.danger:hover {
+background: rgba(239, 68, 68, 0.15);
+border-color: var(--danger);
+}
+
+.btn-add-photo {
+margin-top: 14px;
+width: 100%;
+padding: 14px;
+border-radius: 12px;
+border: 2px dashed rgba(255, 255, 255, 0.15);
+background: transparent;
+color: var(--text-muted);
+cursor: pointer;
+font-family: inherit;
+font-size: 0.9rem;
+transition: all 0.2s ease;
+}
+
+.btn-add-photo:hover {
+border-color: var(--primary);
+color: var(--text);
+background: rgba(99, 102, 241, 0.05);
+}
+
+.theme-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+gap: 12px;
+}
+
+.theme-swatch {
+position: relative;
+border-radius: 12px;
+border: 2px solid rgba(255, 255, 255, 0.1);
+padding: 12px;
+cursor: pointer;
+transition: all 0.2s ease;
+background: rgba(255, 255, 255, 0.02);
+}
+
+.theme-swatch:hover {
+border-color: rgba(255, 255, 255, 0.3);
+transform: translateY(-2px);
+}
+
+.theme-swatch.selected {
+border-color: var(--primary);
+box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.theme-swatch-preview {
+height: 44px;
+border-radius: 8px;
+margin-bottom: 10px;
+}
+
+.theme-swatch-name {
+font-size: 0.8rem;
+font-weight: 500;
+color: var(--text);
+text-align: center;
+}
+
+.theme-swatch-check {
+position: absolute;
+top: 8px;
+right: 8px;
+width: 18px;
+height: 18px;
+border-radius: 50%;
+background: var(--primary);
+color: #fff;
+display: none;
+align-items: center;
+justify-content: center;
+font-size: 0.7rem;
+}
+
+.theme-swatch.selected .theme-swatch-check {
+display: flex;
+}
+
 @media (max-width: 640px) {
 .admin-card { padding: 30px 25px; }
 .header h1 { font-size: 2rem; }
@@ -362,8 +519,18 @@ color: var(--accent);
 </div>
 
 <div class="form-group">
-<label for="birthdayPhotos">Photo URLs (one per line)</label>
-<textarea id="birthdayPhotos" placeholder="https://example.com/photo1.jpg"></textarea>
+<label>Theme</label>
+<div class="theme-grid" id="themeGrid"></div>
+</div>
+
+<div class="form-group">
+<label>Memory Book Photos</label>
+<div class="info-box" style="margin-bottom: 15px;">
+<strong>Tip:</strong> For each page, either paste an image link or click <strong>Upload</strong> to use a photo from your device. Use the arrows to reorder pages.
+</div>
+<div class="photo-list" id="photoList"></div>
+<button type="button" class="btn-add-photo" onclick="addPhotoSlot()">+ Add Photo</button>
+<input type="file" id="photoFileInput" accept="image/*" style="display:none;">
 </div>
 
 <div class="form-group">
@@ -395,9 +562,42 @@ color: var(--accent);
 </div>
 
 <script>
+const THEME_PRESETS = {
+  purple: { label: 'Purple Dream', swatch: 'linear-gradient(135deg, #b066ff, #7fd8ff)' },
+  roseGold: { label: 'Rose Gold', swatch: 'linear-gradient(135deg, #ff6b9d, #ffd700)' },
+  ocean: { label: 'Ocean Breeze', swatch: 'linear-gradient(135deg, #06b6d4, #3b82f6)' },
+  emerald: { label: 'Emerald Forest', swatch: 'linear-gradient(135deg, #10b981, #fbbf24)' },
+  sunset: { label: 'Sunset Blaze', swatch: 'linear-gradient(135deg, #f97316, #facc15)' },
+  crimson: { label: 'Crimson', swatch: 'linear-gradient(135deg, #ef4444, #fbbf24)' },
+  silver: { label: 'Midnight Silver', swatch: 'linear-gradient(135deg, #64748b, #e2e8f0)' }
+};
+
+let selectedTheme = 'purple';
+
+function renderThemeGrid() {
+  const grid = document.getElementById('themeGrid');
+  grid.innerHTML = '';
+  Object.keys(THEME_PRESETS).forEach(key => {
+    const preset = THEME_PRESETS[key];
+    const swatch = document.createElement('div');
+    swatch.className = 'theme-swatch' + (key === selectedTheme ? ' selected' : '');
+    swatch.onclick = () => {
+      selectedTheme = key;
+      renderThemeGrid();
+    };
+    swatch.innerHTML = `
+      <div class="theme-swatch-check">✓</div>
+      <div class="theme-swatch-preview" style="background:${preset.swatch}"></div>
+      <div class="theme-swatch-name">${preset.label}</div>
+    `;
+    grid.appendChild(swatch);
+  });
+}
+
 let currentBirthday = null;
 const DEFAULT_BIRTHDAY = {
   name: 'ANITA',
+  theme: 'purple',
   bookTitle: "Anita's Memory Book ❤️",
   photoData: [
     { url: 'https://picsum.photos/400?random=1' },
@@ -423,13 +623,124 @@ function showBirthdayStatus(message, type) {
   setTimeout(() => { status.style.display = 'none'; }, 4000);
 }
 
+let birthdayPhotos = [];
+let activePhotoUploadIndex = null;
+
 function fillBirthdayForm(data) {
   document.getElementById('birthdayName').value = data.name || DEFAULT_BIRTHDAY.name;
+  selectedTheme = (data.theme && THEME_PRESETS[data.theme]) ? data.theme : DEFAULT_BIRTHDAY.theme;
+  renderThemeGrid();
   document.getElementById('bookTitle').value = data.bookTitle || DEFAULT_BIRTHDAY.bookTitle;
-  document.getElementById('birthdayPhotos').value = (data.photoData || DEFAULT_BIRTHDAY.photoData).map(p => p.url).join('\n');
+  birthdayPhotos = (data.photoData && data.photoData.length ? data.photoData : DEFAULT_BIRTHDAY.photoData).map(p => ({ url: p.url || '' }));
+  renderPhotoList();
   document.getElementById('birthdayFinalMessage').value = data.finalMessage || DEFAULT_BIRTHDAY.finalMessage;
   document.getElementById('birthdayFinalWishes').value = data.finalWishes || DEFAULT_BIRTHDAY.finalWishes;
 }
+
+function renderPhotoList() {
+  const list = document.getElementById('photoList');
+  list.innerHTML = '';
+  birthdayPhotos.forEach((photo, index) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML = photo.url ? `<img src="${photo.url}" alt="Page ${index + 1}">` : '🖼';
+
+    const main = document.createElement('div');
+    main.className = 'photo-slot-main';
+    const urlInput = document.createElement('input');
+    urlInput.type = 'text';
+    urlInput.placeholder = 'https://example.com/photo.jpg';
+    urlInput.value = photo.url || '';
+    urlInput.addEventListener('input', (e) => {
+      birthdayPhotos[index].url = e.target.value;
+      thumb.innerHTML = e.target.value ? `<img src="${e.target.value}" alt="Page ${index + 1}">` : '🖼';
+    });
+    main.appendChild(urlInput);
+
+    const actions = document.createElement('div');
+    actions.className = 'photo-slot-actions';
+
+    const uploadBtn = document.createElement('button');
+    uploadBtn.type = 'button';
+    uploadBtn.className = 'btn-icon';
+    uploadBtn.title = 'Upload image';
+    uploadBtn.textContent = '⬆';
+    uploadBtn.onclick = () => triggerPhotoUpload(index);
+
+    const upBtn = document.createElement('button');
+    upBtn.type = 'button';
+    upBtn.className = 'btn-icon';
+    upBtn.title = 'Move up';
+    upBtn.textContent = '↑';
+    upBtn.disabled = index === 0;
+    upBtn.style.opacity = index === 0 ? '0.3' : '1';
+    upBtn.onclick = () => movePhoto(index, -1);
+
+    const downBtn = document.createElement('button');
+    downBtn.type = 'button';
+    downBtn.className = 'btn-icon';
+    downBtn.title = 'Move down';
+    downBtn.textContent = '↓';
+    downBtn.disabled = index === birthdayPhotos.length - 1;
+    downBtn.style.opacity = index === birthdayPhotos.length - 1 ? '0.3' : '1';
+    downBtn.onclick = () => movePhoto(index, 1);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn-icon danger';
+    removeBtn.title = 'Remove page';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => removePhotoSlot(index);
+
+    actions.appendChild(uploadBtn);
+    actions.appendChild(upBtn);
+    actions.appendChild(downBtn);
+    actions.appendChild(removeBtn);
+
+    slot.appendChild(thumb);
+    slot.appendChild(main);
+    slot.appendChild(actions);
+    list.appendChild(slot);
+  });
+}
+
+function addPhotoSlot() {
+  birthdayPhotos.push({ url: '' });
+  renderPhotoList();
+}
+
+function removePhotoSlot(index) {
+  birthdayPhotos.splice(index, 1);
+  renderPhotoList();
+}
+
+function movePhoto(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= birthdayPhotos.length) return;
+  const [item] = birthdayPhotos.splice(index, 1);
+  birthdayPhotos.splice(newIndex, 0, item);
+  renderPhotoList();
+}
+
+function triggerPhotoUpload(index) {
+  activePhotoUploadIndex = index;
+  document.getElementById('photoFileInput').value = '';
+  document.getElementById('photoFileInput').click();
+}
+
+document.getElementById('photoFileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file || activePhotoUploadIndex === null) return;
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    birthdayPhotos[activePhotoUploadIndex].url = event.target.result;
+    renderPhotoList();
+  };
+  reader.readAsDataURL(file);
+});
 
 function resetBirthdayForm() {
   fillBirthdayForm(DEFAULT_BIRTHDAY);
@@ -455,16 +766,16 @@ async function updateBirthday() {
     return;
   }
 
-  const photoUrls = document.getElementById('birthdayPhotos').value
-    .split('\n')
-    .map(s => s.trim())
-    .filter(Boolean);
+  const photoEntries = birthdayPhotos
+    .map(p => ({ url: (p.url || '').trim() }))
+    .filter(p => p.url);
 
   const data = {
     password,
     name: document.getElementById('birthdayName').value || DEFAULT_BIRTHDAY.name,
+    theme: selectedTheme,
     bookTitle: document.getElementById('bookTitle').value || DEFAULT_BIRTHDAY.bookTitle,
-    photoData: photoUrls.length ? photoUrls.map(url => ({ url })) : DEFAULT_BIRTHDAY.photoData,
+    photoData: photoEntries.length ? photoEntries : DEFAULT_BIRTHDAY.photoData,
     finalMessage: document.getElementById('birthdayFinalMessage').value || DEFAULT_BIRTHDAY.finalMessage,
     finalWishes: document.getElementById('birthdayFinalWishes').value || DEFAULT_BIRTHDAY.finalWishes
   };
